@@ -1,5 +1,11 @@
+import os, sys
+
+current_dir = os.path.dirname(__file__)
+parent_dir = os.path.dirname(current_dir)
+sys.path.append(parent_dir)
 from probe_design_adapted import designHCR3Probes
-import os
+from utils import select_output_directory
+
 
 # CHANGE SETTING BEFORE EACH RUN
 # Obtain gene information from https://www.ncbi.nlm.nih.gov/projects/CCDS/CcdsBrowse.cgi
@@ -19,11 +25,7 @@ prb_space = 2
 dg_thresh = -9
 DATE = '051024'
 
-
-RESULT_PATH = os.path.join(os.getcwd(), f"HCR3_probe_design_files_{DATE}")
-if not os.path.isdir(RESULT_PATH):
-    os.mkdir(RESULT_PATH)
-
+result_path = select_output_directory(f"HCR3_probe_design_files_{DATE}")
 if gene_seqs:
     for i in range(len(gene_names)):
         resultdf = designHCR3Probes(#gene_id=gene_ids[i], 
@@ -32,7 +34,7 @@ if gene_seqs:
                                     sequence=gene_seqs[i],
                                     hairpin_id=hairpin_ids[i], 
                                     db=os.path.join(os.getcwd(), "../data/mouse/mouse_refseq_rna"),
-                                    result_path=RESULT_PATH,
+                                    result_path=result_path,
                                     prb_length=prb_length,
                                     gc_range=gc_range,
                                     prb_space=prb_space,
@@ -46,7 +48,7 @@ else:
                                     #sequence=gene_seqs[i],
                                     hairpin_id=hairpin_ids[i], 
                                     db=os.path.join(os.getcwd(), "../data/mouse/mouse_refseq_rna"),
-                                    result_path=RESULT_PATH,
+                                    result_path=result_path,
                                     prb_length=prb_length,
                                     gc_range=gc_range,
                                     prb_space=prb_space,

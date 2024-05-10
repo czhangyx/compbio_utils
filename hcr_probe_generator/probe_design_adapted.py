@@ -1,16 +1,15 @@
+# Adapted from https://doi.org/10.1038/s41587-022-01648-w
+
 import subprocess
 import os
-
-from Bio import Align, SeqIO, Entrez, SearchIO, SeqFeature
-from Bio.SeqRecord import SeqRecord
-from Bio.Seq import Seq
-
-from primer3 import calc_hairpin     #dependency: primer3-py
-
 import numpy as np
 import pandas as pd
-
 import nupack
+from Bio import SeqIO, Entrez
+from Bio.SeqRecord import SeqRecord
+from Bio.Seq import Seq
+from primer3 import calc_hairpin     #dependency: primer3-py
+
 
 def designHCR3Probes(gene_id="", gene_name="", hairpin_id=None, email=None, 
                 sequence="", db=os.getcwd(), result_path=os.getcwd(), 
