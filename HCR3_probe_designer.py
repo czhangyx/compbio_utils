@@ -1,31 +1,31 @@
-import os, sys
-
-current_dir = os.path.dirname(__file__)
-parent_dir = os.path.dirname(current_dir)
-sys.path.append(parent_dir)
+import os
 from probe_design_adapted import designHCR3Probes
-from utils import select_output_directory
+from utils import select_output_directory, get_six_digit_date_today
 
 
-# CHANGE SETTING BEFORE EACH RUN
+############################## CHANGE SETTING BEFORE EACH RUN ##############################
 # Obtain gene information from https://www.ncbi.nlm.nih.gov/projects/CCDS/CcdsBrowse.cgi
 gene_ids = [ # Use NCBI nucleotide index
-    'NM_138942.3', # DBH
+    'NM_009377.2', # TH
+    'NM_010020.3', # SLC6A3
+    'NM_009891.2', # CHAT
 ]
 gene_names = [
-    'DBH',
+    'TH', 'SLC6A3', 'CHAT'
     ]
 gene_seqs = [ # Leave as empty array if using gene ids
 ]
-hairpin_ids = [1] # Insulator numbers
+hairpin_ids = [3, 5, 1] # Insulator numbers, see https://doi.org/10.1038/s41587-022-01648-w
 
 prb_length = 24
 gc_range = [40, 60]
 prb_space = 2
 dg_thresh = -9
-DATE = '051024'
+############################################################################################
 
-result_path = select_output_directory(f"HCR3_probe_design_files_{DATE}")
+
+date = get_six_digit_date_today()
+result_path = select_output_directory(f"HCR3_probe_design_files_{date}")
 if gene_seqs:
     for i in range(len(gene_names)):
         resultdf = designHCR3Probes(#gene_id=gene_ids[i], 

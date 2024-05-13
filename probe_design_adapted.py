@@ -1,4 +1,4 @@
-# Adapted from https://doi.org/10.1038/s41587-022-01648-w
+# Adapted from https://github.com/GradinaruLab/useqfish_probedesign
 
 import subprocess
 import os
@@ -95,7 +95,7 @@ def designHCR3Probes(gene_id="", gene_name="", hairpin_id=None, email=None,
     prb_pos = np.array(prb_pos.ravel())   
 
     # Check NCBI databank for description matching
-    print(' 2. aligning probe sequences on refseq database using bowtie2')
+    print(' 2. aligning probe sequences on refseq database using bowtie2 ...')
     bad_unique = IsUnique(os.path.join(result_path, f"{gene_name}_prbs_candidates_alignment_results.sam"), gene_name, prb_pos)
     bad_unique_each = IsUnique(os.path.join(result_path, f"{gene_name}_prbs_candidates_full_alignment_results.sam"),
                                gene_name, prb_pos, full=True)
@@ -110,8 +110,7 @@ def designHCR3Probes(gene_id="", gene_name="", hairpin_id=None, email=None,
                 prb_final_pos.append(pos)
             elif pos > prb_final_pos[-1] + prb_length*2 + prb_space:
                 prb_final_pos.append(pos)
-    print(prb_final_pos)
-    print(f'- {gene_name} done! # of final probes: %i' % len(prb_final_pos), '\n')
+    print(f'- {gene_name} done! Generated %i' % len(prb_final_pos), 'pairs of probes\n')
 
     # recall probe pairs
     prb_final_A = []
@@ -303,7 +302,6 @@ def IsUnique(samfile_path, gene_name, prb_pos, full=False):
     hits = [[] for _ in range(num_prbs)]
     if full:
         hits = [[] for _ in range(num_prbs*2)]
-    # print(hits)
     with open(samfile_path, "rb") as samfile:
         i = 0
         for line in samfile:
@@ -321,8 +319,6 @@ def IsUnique(samfile_path, gene_name, prb_pos, full=False):
     variants = ['*']
     bad_unique = np.zeros((num_prbs,), dtype=bool)
     for i, hits_for_oneprb in enumerate(hits):
-        if not i % 10:
-            print(f'{i}/{num_prbs}')
         for hit_id in hits_for_oneprb:
             if hit_id not in variants:
                 handle = Entrez.efetch(db="nucleotide", id=hit_id, rettype="gb", retmode="text")
