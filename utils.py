@@ -138,29 +138,28 @@ Input:
 Returns: a list of IDT information in the following order:
     [IDT_username, IDT_password, client_ID, client_secret]
 """
-def import_IDT_information(filepath: str) -> list:
+def import_IDT_information(filepath: str) -> list[str]:
     return pd.read_csv(filepath).iloc[0, 0].split('\t')
 
 
 """
 Reverse translate input peptide sequences to DNA with sequence optimization
 using IDT's API.
-Please refer to TODO for a list of acceptable organisms.
 
 Inputs:
     data: 
     organism: the target organism for codon optimization.
-              Please refer to README.md for a full list of acceptable organisms.
     product_type: the target type of DNA for codon optimization.
                   Acceptable inputs: gblock, gene, megamer
     client_id: IDT client ID.
     client_secret: IDT client secret.
     idt_username: IDT username.
     idt_password: IDT password.
-Returns: TODO
+Returns: reverse translated DNA sequences.
 """
 def reverse_translate(data, organism: str, product_type: str,
-                      IDT_username: str, IDT_password: str, client_ID: str, client_secret: str):
+                      IDT_username: str, IDT_password: str,
+                      client_ID: str, client_secret: str) -> list[str]:
     assert _organism_in_idt(organism), "Chosen organism is not in list"
     assert _product_type_in_idt(product_type), "Chosen product type is not valid"
 
@@ -187,6 +186,9 @@ def reverse_translate(data, organism: str, product_type: str,
     return dnas
 
 
+"""
+TODO
+"""
 class Primer:
     def __init__(self):
         self.fwd = ''
