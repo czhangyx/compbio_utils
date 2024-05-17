@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 import numpy as np
-from utils import get_six_digit_date_today, select_input_file, select_output_directory
+from utils import get_six_digit_date_today, select_input_file, select_output_directory, report_progress
 from utils import get_sequence_from_coordinate, pick_primer, Primer
 
 
@@ -49,9 +49,7 @@ if CONVERT_FROM_COORDINATES:
     current_percentage = 0
     for i in range(len(array)):
         total_seqs.append(get_sequence_from_coordinate(coordinates[i]))
-        if len(array) // REPORTING_PERCENTAGES[current_percentage//10] == i+1:
-            print(f"finished {i+1}")
-            current_percentage = REPORTING_PERCENTAGES[current_percentage//10 + 1]
+        report_progress(i, len(array))
 else:
     total_seqs = [peak[SEQUENCE_COLUMN_NUMBER] for peak in array]
 

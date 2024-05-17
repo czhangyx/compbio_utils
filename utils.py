@@ -1,15 +1,18 @@
 import os, sys
 import requests, json
+import pandas as pd
 import tkinter as tk
 from datetime import date
 from tkinter import filedialog
-from __future__ import print_function
 from base64 import b64encode
 from urllib import request, parse
 from Bio.SeqUtils import GC
 from Bio.SeqUtils.MeltingTemp import Tm_GC, Tm_NN, Tm_Wallace
 
 
+"""
+TODO
+"""
 def pick_primer(primer, primer_type, selection, forbidden, low_gc, high_gc, low_tm, high_tm):
     if not any([x in selection for x in forbidden]):
         gc = round(GC(selection), 2)
@@ -72,6 +75,7 @@ def select_output_directory(new_dir_name: str) -> str:
 
 """
 Returns a 6-digit representation of today's date.
+Throws error if input date_format is not supported.
 
 Input:
     date_format: date representation format, defaulted to mmddyy.
@@ -98,6 +102,19 @@ def get_six_digit_date_today(date_format: str ='mmddyy') -> str:
 
 
 """
+Print progress of the current program every milestone.
+
+Inputs:
+    count: current iteration count number.
+    total: total number of iterations.
+    milestone: percentage frequency of reporting.
+"""
+def report_progress(count: int, total: int, milestone: int=10):
+    if (count+1) % (total // milestone) == 0:
+        print(f"finished {count+1}/{total}")
+
+
+"""
 Connect to UCSC Genome Browser API to return DNA sequence at specified location.
 
 Inputs:
@@ -114,38 +131,60 @@ def get_sequence_from_coordinate(coordinate: tuple, genome: str ='mm10') -> str:
 
 
 """
-Retrieve IDT access token.
+Imports IDT information required for accessing the IDT API.
+
+Input: 
+    filepath: the input file path retrieved with select_input_file.
+Returns: a list of IDT information in the following order:
+    [IDT_username, IDT_password, client_ID, client_secret]
+"""
+def import_IDT_information(filepath: str) -> list:
+    return pd.read_csv(filepath).iloc[0, 0].split('\t')
+
+
+"""
+Reverse translate input peptide sequences to DNA with sequence optimization
+using IDT's API.
+Please refer to TODO for a list of acceptable organisms.
 
 Inputs:
+    data: 
+    organism: the target organism for codon optimization.
+              Please refer to README.md for a full list of acceptable organisms.
+    product_type: the target type of DNA for codon optimization.
+                  Acceptable inputs: gblock, gene, megamer
     client_id: IDT client ID.
-    client_secret: IDT Client secret.
+    client_secret: IDT client secret.
     idt_username: IDT username.
     idt_password: IDT password.
-Returns:
+Returns: TODO
 """
-def get_idt_access_token(client_id: str, client_secret: str,
-                         idt_username: str, idt_password: str) -> str:
-    authorization_string = b64encode(bytes(client_id + ":" + client_secret, "utf-8")).decode()
-    request_headers = {"Content-Type": "application/x-www-form-urlencoded",
-                       "Authorization": "Basic " + authorization_string}
-    data_dict = {"grant_type": "password",
-                 "scope": "test",
-                 "username": idt_username,
-                 "password": idt_password}
-    request_data = parse.urlencode(data_dict).encode()
-    post_request = request.Request("https://www.idtdna.com/Identityserver/connect/token", 
-                                    data = request_data, 
-                                    headers = request_headers,
-                                    method = "POST")
+def reverse_translate(data, organism: str, product_type: str,
+                      IDT_username: str, IDT_password: str, client_ID: str, client_secret: str):
+    assert _organism_in_idt(organism), "Chosen organism is not in list"
+    assert _product_type_in_idt(product_type), "Chosen product type is not valid"
 
-    response = request.urlopen(post_request)
-    body = response.read().decode()
+    access_token = _get_idt_access_token(IDT_username, IDT_password, client_ID, client_secret)
+    results = requests.post('https://www.idtdna.com/restapi/v1/CodonOpt/Optimize',
+                        json={
+                            'organism': organism,
+                            'optimizationItems': data,
+                            'sequenceType': 'aminoAcid',
+                            'productType': product_type
+                        },
+                        headers={
+                            'Authorization': f'Bearer {access_token}',
+                            'Content-Type': 'application/json'
+                        }).json()
     
-    if (response.status != 200):
-        raise RuntimeError("Request failed with error code:" + response.status + "\nBody:\n" + body)
-    
-    return json.loads(body)["access_token"]
-
+    # Clean up result and return a list of DNA sequences
+    dnas = []
+    for result in results:
+        if 'Message' in result:
+            dnas.append(None)
+        else:
+            dnas.append(result['OptResult']['FullSequence'])
+    return dnas
 
 
 class Primer:
@@ -271,3 +310,147 @@ def _genome_in_ucsc(genome: str) -> bool:
                       'rheMac8', 'rn3', 'rn4', 'rn5', 'rn6', 'rn7', 'sacCer1', 'susScr11',
                       'susScr2', 'susScr3', 'taeGut1', 'taeGut2', 'tetNig1', 'tetNig2',
                       'xenTro10', 'xenTro9']
+
+def _get_idt_access_token(IDT_username: str, IDT_password: str,
+                          client_ID: str, client_secret: str) -> str:
+    authorization_string = b64encode(bytes(client_ID + ":" + client_secret, "utf-8")).decode()
+    request_headers = {"Content-Type": "application/x-www-form-urlencoded",
+                       "Authorization": "Basic " + authorization_string}
+    data_dict = {"grant_type": "password",
+                 "scope": "test",
+                 "username": IDT_username,
+                 "password": IDT_password}
+    request_data = parse.urlencode(data_dict).encode()
+    post_request = request.Request("https://www.idtdna.com/Identityserver/connect/token", 
+                                    data = request_data, 
+                                    headers = request_headers,
+                                    method = "POST")
+
+    response = request.urlopen(post_request)
+    body = response.read().decode()
+    
+    if (response.status != 200):
+        raise RuntimeError("Request failed with error code:" + response.status + "\nBody:\n" + body)
+    
+    return json.loads(body)["access_token"]
+
+def _organism_in_idt(organism: str) -> bool:
+    return organism in ["Drosophila melanogaster",
+                        "Escherichia coli K12",
+                        "Homo sapiens (human)",
+                        "Mus musculus (mouse)",
+                        "Pichia pastoris",
+                        "Saccharomyces cerevisiae",
+                        "Arabidopsis thaliana",
+                        "Aspergillus niger",
+                        "Azotobacter vinelandii",
+                        "Bacillus megaterium",
+                        "Bacillus subtilis",
+                        "Bifidobacterium longum",
+                        "Bombyx mori (silkmoth)",
+                        "Bos taurus",
+                        "Danio rerio (zebrafish)",
+                        "Bradyrhizobium japonicum",
+                        "Brassica napus (rape)",
+                        "Brevibacillus brevis",
+                        "Caenorhabditis elegans (nematode)",
+                        "Candida albicans",
+                        "Canis familiaris (dog)",
+                        "Caulobacter crescentus CB15",
+                        "Chlamydia trachomatis D/UW-3/CX",
+                        "Chlamydomonas reinhardtii",
+                        "Clostridium acetobutylicum ATCC 824",
+                        "Corynebacterium glutamicum",
+                        "Cricetulus griseus (hamster)",
+                        "Cyanophora paradoxa",
+                        "Danio rerio",
+                        "Dictyostelium discoideum",
+                        "Emericella nidulans",
+                        "Erwinia carotovora subsp. atroseptica SCRI1043",
+                        "Escherichia coli",
+                        "Escherichia coli B",
+                        "Gallus gallus",
+                        "Geobacillus stearothermophilus",
+                        "Glycine max (soybean)",
+                        "Haemophilus influenzae Rd KW20",
+                        "Haloarcula marismortui ATCC 43049 (Halobacterium marismortui)",
+                        "Halobacterium salinarum",
+                        "Hordeum vulgare subsp vulgare (Barley)",
+                        "Klebsiella oxytoca",
+                        "Klebsiella pneumoniae",
+                        "Kluyveromyces lactis NRRL Y-1140",
+                        "Lactobacillus acidophilus",
+                        "Lactococcus lactis subsp cremoris",
+                        "Leishmania donovani",
+                        "Macaca fascicularis",
+                        "Magnetospirillum magneticum",
+                        "Manduca sexta",
+                        "Mannheimia haemolytica",
+                        "Medicago sativa",
+                        "Methanothermobacter thermautotrophicus str. Delta H",
+                        "Moorella thermoacetica",
+                        "Mycobacterium tuberculosis H37Rv",
+                        "Neisseria gonorrhoeae",
+                        "Neurospora crassa",
+                        "Nicotiana benthamiana",
+                        "Nicotiana tabacum (tobacco)",
+                        "Oncorhynchus mykiss (rainbow trout)",
+                        "Oryctolagus cuniculus (rabbit)",
+                        "Oryza sativa (rice)",
+                        "Ovis aries (sheep)",
+                        "Petunia x hybrida",
+                        "Phaseolus vulgaris (lima bean)",
+                        "Pisum sativum (pea)",
+                        "Plasmodium falciparum 3D7",
+                        "Proteus vulgaris",
+                        "Pseudomonas aeruginosa PAO1",
+                        "Pseudomonas putida",
+                        "Rattus norvegicus (rat)",
+                        "Pseudomonas syringae pv tomato str DC3000",
+                        "Rhizobium leguminosarum",
+                        "Rhodobacter capsulatus",
+                        "Rhodobacter sphaeroides",
+                        "Salmo salar (Atlantic salmon)",
+                        "Salmonella typhimurium LT2",
+                        "Schistosoma mansoni",
+                        "Schizosaccharomyces pombe",
+                        "Schmidtea mediterranea",
+                        "Serratia marcescens",
+                        "Shewanella frigidimarina",
+                        "Simian Virus 40",
+                        "Sinorhizobium meliloti 1021",
+                        "Solanum lycopersicum (tomato)",
+                        "Solanum tuberosum (potato)",
+                        "Sorghum bicolor",
+                        "Spinacia oleracea (spinach)",
+                        "Spodoptera frugiperda",
+                        "Staphylococcus aureus subsp. aureus",
+                        "Streptococcus mutans UA159",
+                        "Streptococcus pneumoniae",
+                        "Streptomyces coelicolor",
+                        "Strongylocentrotus purpuratus (sea urchin)",
+                        "Sus scrofa (pig)",
+                        "Synechococcus sp. WH 8102",
+                        "Synechococcus sp. PCC 7002",
+                        "Synechocystis sp. PCC 6803",
+                        "Tetrahymena thermophila",
+                        "Thalassiosira pseudonana",
+                        "Thermus thermophilus HB8",
+                        "Tobacco Mosaic Virus",
+                        "Toxoplasma gondii",
+                        "Trichoplusia ni",
+                        "Triticum aestivum (wheat)",
+                        "Trypanosoma brucei",
+                        "Trypanosoma cruzi",
+                        "Ustilago maydis",
+                        "Vaccinia Virus",
+                        "Vibrio cholerae O1 biovar eltor str. N16961",
+                        "Xenopus laevis",
+                        "Yarrowia lipolytica",
+                        "Yersinia enterocolitica",
+                        "Yersinia pestis",
+                        "Zea mays"
+                        ]
+
+def _product_type_in_idt(product_type: str) -> bool:
+    return product_type in ["gblock", "gene", "megamer"]

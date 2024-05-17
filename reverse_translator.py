@@ -1,95 +1,38 @@
 import numpy as np
 import pandas as pd
-import requests
-from utils import get_idt_access_token
+from utils import select_input_file, report_progress
+from utils import import_IDT_information, reverse_translate
 
-# CHANGEABLE SECTION
+################################# CHANGE SETTING BEFORE EACH RUN #################################
 IMPORT_FILE_NAME = 'Candidate_Type_I_TM_proteins_sequence_windows.xlsx'
 EXPORT_FILE_NAME = 'Candidate_Type_I_TM_proteins_reverse_translated.xlsx'
+NAME_COLUMN_NUMBER = 0  # Column number that contains name, zero-indexed
+SEQUENCE_COLUMN_NUMBER = 5  # Column number that contains sequence information, zero-indexed
+ORGANISM = 'Mus musculus (mouse)'
+##################################################################################################
 
-# IDT API Information
-IDT_username = 'czhangyx'
-IDT_password = 'czhangyx037'
-client_ID = 'czhangyx'
-client_description = 'Yixin Zhang'
-client_secret = '38645523-6e00-4897-ab5c-80c97e39e26d'
-URL = {
-    'organisms': 'https://www.idtdna.com/restapi/v1/CodonOpt/Organisms',
-    'sequence types': 'https://www.idtdna.com/restapi/v1/CodonOpt/SequenceTypes',
-    'product types': 'https://www.idtdna.com/restapi/v1/CodonOpt/ProductTypes',
-    'output': 'https://www.idtdna.com/restapi/v1/CodonOpt/Optimize'
-}
 
-# Import data
-excel = pd.read_excel(IMPORT_FILE_NAME)
-excel_array = np.array(excel)
-
-TOTAL = len(excel_array)
-
-# Helper function
-def reverse_translate(data):
-    # Connect to IDT codon optimization API (accessible at https://www.idtdna.com/restapi/swagger/docs/v1)
-    access_token = get_idt_access_token(client_ID, client_secret, IDT_username, IDT_password)
-    organism = requests.get(URL['organisms'], headers={
-        'Authorization': f'Bearer {access_token}',
-        'Content-Type': 'application/json'
-    }).json()[2]
-    sequence_type = requests.get(URL['sequence types'], headers={
-        'Authorization': f'Bearer {access_token}',
-        'Content-Type': 'application/json'
-    }).json()[1]
-    product_type = requests.get(URL['product types'], headers={
-        'Authorization': f'Bearer {access_token}',
-        'Content-Type': 'application/json'
-    }).json()[0]
-
-    results = requests.post(URL['output'],
-                        json={
-                            'organism': organism,
-                            'optimizationItems': data,
-                            'sequenceType': sequence_type,
-                            'productType': product_type},
-                        headers={
-                            'Authorization': f'Bearer {access_token}',
-                            'Content-Type': 'application/json'}).json()
-    
-    # Clean up result and return a string of DNA sequences, separated by comma
-    dna = ''
-    for result in results:
-        window_dna = result['OptResult']['FullSequence']
-        print(window_dna)
-        dna += (window_dna + ', ')
-    return dna
+# Import IDT information and data
+IDT_file = select_input_file({("text", ".txt"), ("csv", ".csv")})
+IDT_info = import_IDT_information(IDT_file)
+df = pd.read_excel(IMPORT_FILE_NAME)
+array = df.values
+titles = df.columns.to_list()
+total = len(array)
 
 print('\nReverse translation started...')
-dnas = []
-count = 0
-for domain in excel_array:
-    data = []
-    name = domain[0]
-    number = 1
-    aa = ''
-    for letter in domain[5]:
-        if letter == ' ':
-            data.append({
-                'Name': f'{name} #{number}',
-                'Sequence': aa
-            })
-            aa = ''
-            number += 1
-        else:
-            aa += letter
-    dnas.append(reverse_translate(data))
-    count += 1
-    print(f'{count}/{TOTAL} done\n')
-dnas = np.array(dnas)
-print(dnas)
+data = []
+for row in array:
+    name = row[NAME_COLUMN_NUMBER]
+    seq = row[SEQUENCE_COLUMN_NUMBER].upper()
+    assert all([aa in 'QWERTYIPASDFGHKLCVNM' for aa in seq]), \
+        f'Sequence for {name} has invalid amino acid'
+    data.append({'Name': {name},
+                 'Sequence': seq})
+dnas = np.array(reverse_translate(data, ORGANISM, *IDT_info))
 
-# Generate excel file
 print('\nGenerating excel file...')
-df = pd.DataFrame(np.hstack((excel_array, dnas.reshape(-1, 1))))
-df.columns = ['Gene Names', 'Transmembrane Sequence', 'Transmembrane length', 
-              'Cytoplasmic Sequence', 'Cytoplasmic length',
-              'Cytoplasmic Sequence Windows', 'Cytoplasmic Windows Translated']
-df.to_excel(EXPORT_FILE_NAME, index=False)
+new_df = pd.DataFrame(np.hstack((array, dnas.reshape(-1, 1))))
+new_df.columns = titles + [f'{titles[SEQUENCE_COLUMN_NUMBER]} Reverse Translated']
+new_df.to_excel(EXPORT_FILE_NAME, index=False)
 print('Complete!\n')
