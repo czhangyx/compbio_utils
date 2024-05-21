@@ -6,17 +6,16 @@ Other softwares: [Nupack](https://www.nupack.org)
 ## Installation
 
 ## Functions
-
-### Primer design
+### 1. Primer design
 Primer generation from sequence: run primer_generator.py  
 Primer generation from chromosome coordinate: run generate_primers_from_coordinates.py  
 Input file format requirement:  
 - Excel file
 
-### HCR probe design
+### 2. HCR probe design
 Run HCR3_probe_designer.py
 
-### Reverse translation
+### 3. Reverse translation
 *This function requires Internet connection*
 Input file format requirement: text file with tab-separated values. The file should have 5 columns and 2 rows, including a header row. The second row should include information in the order of IDT username, IDT password, client ID, and client secret. Client ID and client secret can be found on IDT's website (see more at https://www.idtdna.com/pages/tools/apidoc).
 Acceptable target organisms (please enter the full name between quotes, including parenthese):
@@ -65,6 +64,7 @@ Acceptable target organisms (please enter the full name between quotes, includin
 #### Z
 "Zea mays"
 
+### 
 #### Citations
 [HCR probe design](https://doi.org/10.1038/s41587-022-01648-w)  
 

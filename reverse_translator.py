@@ -16,6 +16,8 @@ VALID_FILETYPES = [("Excel-1", ".xlsx"), ("Excel-2", ".xls"), ("Excel-3", ".xlsm
                    ("Excel-5", ".odf"), ("Excel-6", ".ods"), ("Excel-7", ".odt"),
                    ("CSV", ".csv"), ("TXT", ".txt")]
 
+
+
 # Import IDT information and data
 IDT_file = select_input_file({("text", ".txt"), ("csv", ".csv")})
 IDT_info = import_IDT_information(IDT_file)
@@ -23,7 +25,6 @@ import_file_name = select_input_file(VALID_FILETYPES)
 df = pd.read_excel(import_file_name)
 array = df.values
 titles = df.columns.to_list()
-total = len(array)
 
 print('\nProcessing imported file...')
 data = []

@@ -6,11 +6,13 @@ from utils import get_sequence_from_coordinate, pick_primer, Primer
 
 
 ################################# CHANGE SETTING BEFORE EACH RUN #################################
-CONVERT_FROM_COORDINATES = False  # set to True if only chromosome coordinates are available
+CONVERT_FROM_COORDINATES = False  # Set to True if only chromosome coordinates are available
 COORDINATE_COLUMN_NUMBER = 1  # Column number that contains chromosome coordinates, zero-indexed
 SEQUENCE_COLUMN_NUMBER = 2  # Column number that contains sequence information, zero-indexed
 FLANK_SIZE = 50
 TARGET_LENGTH = 500
+TIGHT_FLANK = True  # Set to True if you want to remove as much flanking sequence as possible;
+                    # set to False if you want to retain as much flanking sequence as possible
 #FWD_FINAL_INDEX = 49
 #REV_INIT_INDEX = 550
 
@@ -24,9 +26,7 @@ HIGH_TM = 60
 LEN_RANGE = range(22, 25)
 ##################################################################################################
 
-
 # Helper variables
-REPORTING_PERCENTAGES = [10*x for x in range(1, 11)]
 VALID_FILETYPES = [("Excel-1", ".xlsx"), ("Excel-2", ".xls"), ("Excel-3", ".xlsm"), ("Excel-4", ".xlsb"),
                    ("Excel-5", ".odf"), ("Excel-6", ".ods"), ("Excel-7", ".odt"),
                    ("CSV", ".csv"), ("TXT", ".txt")]
@@ -50,7 +50,7 @@ if CONVERT_FROM_COORDINATES:
     current_percentage = 0
     for i in range(len(array)):
         total_seqs.append(get_sequence_from_coordinate(coordinates[i]))
-        report_progress(i, len(array))
+        report_progress(i+1, len(array))
 else:
     total_seqs = [peak[SEQUENCE_COLUMN_NUMBER] for peak in array]
 
@@ -64,13 +64,27 @@ for seq in total_seqs:
     primer = Primer()
 
     for length in LEN_RANGE:
-        fwd_flank = seq[:FWD_FINAL_INDEX]
-        rev_flank = seq[REV_INIT_INDEX:]
+        if primer.fwd and primer.rev:
+            break
+        fwd_flank = seq[:FLANK_SIZE]
+        rev_flank = seq[TARGET_LENGTH+FLANK_SIZE:]
         while len(fwd_flank) >= length and len(rev_flank) >= length:
-            pick_primer(primer, 'fwd', fwd_flank[-length:], FORBIDDEN, LOW_GC, HIGH_GC, LOW_TM, HIGH_TM)
-            pick_primer(primer, 'rev', rev_flank[:length], FORBIDDEN, LOW_GC, HIGH_GC, LOW_TM, HIGH_TM)
-            fwd_flank = fwd_flank[:-1]
-            rev_flank = rev_flank[1:]
+            if primer.fwd and primer.rev:
+                break
+            if TIGHT_FLANK:
+                pick_primer(primer, 'fwd', fwd_flank[-length:], FORBIDDEN,
+                            LOW_GC, HIGH_GC, LOW_TM, HIGH_TM)
+                pick_primer(primer, 'rev', rev_flank[:length], FORBIDDEN,
+                            LOW_GC, HIGH_GC, LOW_TM, HIGH_TM)
+                fwd_flank.pop()
+                rev_flank.pop(0)
+            else:
+                pick_primer(primer, 'fwd', fwd_flank[:length], FORBIDDEN,
+                            LOW_GC, HIGH_GC, LOW_TM, HIGH_TM)
+                pick_primer(primer, 'rev', rev_flank[-length:], FORBIDDEN,
+                            LOW_GC, HIGH_GC, LOW_TM, HIGH_TM)
+                fwd_flank.pop(0)
+                rev_flank.pop()
 
     primers.append(primer)
     primer.message(i)

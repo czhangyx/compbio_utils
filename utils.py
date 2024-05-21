@@ -1,3 +1,4 @@
+import re
 import os, sys
 import requests, json
 import pandas as pd
@@ -11,9 +12,96 @@ from Bio.SeqUtils.MeltingTemp import Tm_GC, Tm_NN, Tm_Wallace
 
 
 """
-TODO
+A class representing a PCR primer pair.
 """
-def pick_primer(primer, primer_type, selection, forbidden, low_gc, high_gc, low_tm, high_tm):
+class Primer:
+    def __init__(self):
+        self.fwd = ''           # Forward primer sequence
+        self.fwd_len = 0        # Forward primer length
+        self.fwd_Tm = None      # Forward primer melting temperature
+        self.fwd_gc = None      # Forward primer GC%
+
+        self.rev = ''           # Reverse primer sequence
+        self.rev_len = 0        # Reverse primer length
+        self.rev_Tm = None      # Reverse primer melting temperature
+        self.rev_gc = None      # Reverse primer GC%
+    
+    """
+    Update forward primer and its information in place.
+
+    Input:
+        fwd: primer sequence.
+        fwd_gc: primer GC%, rounded to 2 decimals.
+        fwd_Tm: primer melting temperature.
+    """
+    def update_fwd(self, fwd: str, fwd_gc: float, fwd_Tm: float):
+        self.fwd = fwd
+        self.fwd_len = len(fwd)
+        self.fwd_Tm = fwd_Tm
+        self.fwd_gc = fwd_gc
+    
+    """
+    Update reverse primer and its information in place.
+
+    Input:
+        rev: primer sequence.
+        rev_gc: primer GC%, rounded to 2 decimals.
+        rev_Tm: primer melting temperature.
+    """
+    def update_rev(self, rev: str, rev_gc: float, rev_Tm: float):
+        self.rev = rev
+        self.rev_len = len(rev)
+        self.rev_Tm = rev_Tm
+        self.rev_gc = rev_gc
+    
+    """
+    Returns a list of forward primer information in the order of sequence, length,
+    GC%, and melting temperature.
+    """
+    def fwd_info(self):
+        return [self.fwd, self.fwd_len, self.fwd_gc, self.fwd_Tm]
+    
+    """
+    Returns a list of reverse primer information in the order of sequence, length,
+    GC%, and melting temperature.
+    """
+    def rev_info(self):
+        return [self.rev, self.rev_len, self.rev_gc, self.rev_Tm]
+
+    """
+    Print progress for primer selection.
+
+    Input:
+        i: current sequence number.
+    """
+    def message(self, i: int):
+        if self.fwd and self.rev:
+            print(f'\nSuccessfully picked fwd and rev primers for sequence #{i}')
+        elif self.fwd:
+            print(f'rev was unsuccessful for sequence #{i}')
+        elif self.rev:
+            print(f'fwd was unsuccessful for sequence #{i}')
+        else:
+            print(f'Primer selection was unsuccessful for sequence #{i}')
+
+
+"""
+Pick a valid primer pair and edit primer in place.
+
+Inputs:
+    primer: primer pair to be edited.
+    primer_type: "fwd" (forward) or "rev" (reverse).
+    selection: a potential primer sequence that needs to tested for requirements.
+    forbidden: a list of forbidden motifs that should not exist in primers.
+    low_gc: lower bound of GC% range.
+    high_gc: upper bound of GC% range.
+    low_tm: lower bound of melting temperature.
+    high_tm: upper bound of melting temperature.
+"""
+def pick_primer(primer: Primer, primer_type: str, selection: str, forbidden: list[str],
+                low_gc: float, high_gc: float, low_tm: float, high_tm: float):
+    assert primer_type in ['fwd', 'rev'], "primer_type should be fwd or rev"
+
     if not any([x in selection for x in forbidden]):
         gc = round(GC(selection), 2)
         tm = round(_Tm(selection), 2)
@@ -83,7 +171,7 @@ Input:
 """
 def get_six_digit_date_today(date_format: str ='mmddyy') -> str:
     date_format = date_format.lower()
-    assert date_format in ['yymmdd', 'mmddyy', 'ddmmyy'], f"Date format of {date_format} is unacceptable"
+    assert date_format in ['yymmdd', 'mmddyy', 'ddmmyy'], f"date_format should be yymmdd, mmddyy, or ddmmyy"
 
     year = str(date.today().year % 100)
     month = str(date.today().month)
@@ -102,7 +190,8 @@ def get_six_digit_date_today(date_format: str ='mmddyy') -> str:
 
 
 """
-Print progress of the current program every milestone.
+Print progress of the current program every milestone. Can turn off update by
+setting milestone to 0.
 
 Inputs:
     count: current iteration count number.
@@ -110,6 +199,9 @@ Inputs:
     milestone: percentage frequency of reporting.
 """
 def report_progress(count: int, total: int, milestone: int=10):
+    assert 0 <= milestone and milestone <= 100, "milestone must be a valid percentage between 0 and 100"
+    if not milestone:
+        return
     if (count+1) % (total // milestone) == 0:
         print(f"finished {count+1}/{total}")
 
@@ -186,52 +278,10 @@ def reverse_translate(data, organism: str, product_type: str,
     return dnas
 
 
-"""
-TODO
-"""
-class Primer:
-    def __init__(self):
-        self.fwd = ''
-        self.fwd_len = 0
-        self.fwd_Tm = None
-        self.fwd_gc = None
-
-        self.rev = ''
-        self.rev_len = 0
-        self.rev_Tm = None
-        self.rev_gc = None
-    
-    def update_fwd(self, fwd, fwd_gc, fwd_Tm):
-        self.fwd = fwd
-        self.fwd_len = len(fwd)
-        self.fwd_Tm = fwd_Tm
-        self.fwd_gc = fwd_gc
-    
-    def update_rev(self, rev, rev_gc, rev_Tm):
-        self.rev = rev
-        self.rev_len = len(rev)
-        self.rev_Tm = rev_Tm
-        self.rev_gc = rev_gc
-    
-    def fwd_info(self):
-        return [self.fwd, self.fwd_len, self.fwd_gc, self.fwd_Tm]
-    
-    def rev_info(self):
-        return [self.rev, self.rev_len, self.rev_gc, self.rev_Tm]
-
-    def message(self, i):
-        if self.fwd and self.rev:
-            print(f'\nSuccessfully picked fwd and rev primers for sequence #{i}')
-        elif self.fwd:
-            print(f'rev was unsuccessful for sequence #{i}')
-        elif self.rev:
-            print(f'fwd was unsuccessful for sequence #{i}')
-        else:
-            print(f'Primer selection was unsuccessful for sequence #{i}')
 
 
 
-# HELPER FUNCTIONS
+# Helper functions
 def _Tm(sequence: str) -> float:
     # Calculate Tm from 4 methods and return average
     sequence = sequence.upper()
@@ -253,48 +303,32 @@ def _Tm(sequence: str) -> float:
     nn = Tm_NN(sequence)
     return (formula+wallace+gc+nn)/4
 
+
 def _get_complement(sequence: str) -> str:
     # Return complement sequence of input DNA sequence
     sequence = sequence.upper()
     assert _is_DNA(sequence), "Input DNA is not valid: contains non AGCT character"
 
-    result = ''
-    for base in sequence:
-        if base == 'A':
-            result = 'T' + result
-        if base == 'T':
-            result = 'A' + result
-        if base == 'G':
-            result = 'C' + result
-        if base == 'C':
-            result = 'G' + result
-    return result
+    DNA_DICT = {'A': 'T', 'T': 'A', 'C': 'G', 'G': 'C'}
+    return ''.join([DNA_DICT[base] for base in sequence])
+
 
 def _is_DNA(sequence: str) -> bool:
     # Return if the input sequence is valid DNA
     return all([base in 'AGCT' for base in sequence])
 
+
 def _process_coordinates(coordinate: str) -> tuple:
-    ## Break coordinates into chromosome, start position, and end position
-    chromosome = ""
-    chr_done = False
-    start = ""
-    start_done = False
-    end = ""
-    while coordinate:
-        current = coordinate[0]
-        if current == ":":
-            chr_done = True
-        elif current == "-":
-            start_done = True
-        elif not chr_done:
-            chromosome += current
-        elif not start_done:
-            start += current
-        else:
-            end += current
-        coordinate = coordinate[1:]
-    return (chromosome, int(start)-1, end)
+    # Break coordinates into chromosome, start position, and end position
+    assert _is_coordinate(coordinate), f"coordinate {coordinate} is not valid"
+
+    split = re.split(':|-', coordinate)
+    return (split[0], int(split[1]-1), int(split[2]))
+
+
+def _is_coordinate(coordinate: str) -> bool:
+    return re.compile("chr(\d+|[XYM]):\d+-\d+").match(coordinate)
+
 
 def _genome_in_ucsc(genome: str) -> bool:
     return genome in ['anoCar2', 'bosTau2', 'bosTau3', 'bosTau4', 'bosTau6', 'bosTau7',
@@ -312,6 +346,7 @@ def _genome_in_ucsc(genome: str) -> bool:
                       'rheMac8', 'rn3', 'rn4', 'rn5', 'rn6', 'rn7', 'sacCer1', 'susScr11',
                       'susScr2', 'susScr3', 'taeGut1', 'taeGut2', 'tetNig1', 'tetNig2',
                       'xenTro10', 'xenTro9']
+
 
 def _get_idt_access_token(IDT_username: str, IDT_password: str,
                           client_ID: str, client_secret: str) -> str:
@@ -335,6 +370,7 @@ def _get_idt_access_token(IDT_username: str, IDT_password: str,
         raise RuntimeError("Request failed with error code:" + response.status + "\nBody:\n" + body)
     
     return json.loads(body)["access_token"]
+
 
 def _organism_in_idt(organism: str) -> bool:
     return organism in ["Drosophila melanogaster",
@@ -453,6 +489,7 @@ def _organism_in_idt(organism: str) -> bool:
                         "Yersinia pestis",
                         "Zea mays"
                         ]
+
 
 def _product_type_in_idt(product_type: str) -> bool:
     return product_type in ["gblock", "gene", "megamer"]
