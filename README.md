@@ -14,16 +14,12 @@ Other softwares: [Nupack](https://www.nupack.org)
 
 | Parameter name | Description |
 |:---------|:---------|
-| `CONVERT_FROM_COORDINATES` | 
-`True`: Only chromosome coordinates are available in the input file  
-`False`: Full sequences are available in the input file |
+| `CONVERT_FROM_COORDINATES` | `True`: Only chromosome coordinates are available in the input file  `False`: Full sequences are available in the input file |
 | `COORDINATE_COLUMN_NUMBER` | The column number that contains chromosome coordinates in the input file, zero-indexed (value does not matter if `CONVERT_FROM_COORDINATES` is set to `False`) |
 | `SEQUENCE_COLUMN_NUMBER` | The column number that contains sequences in the input file, zero-indexed (value does not matter if `SEQUENCE_COLUMN_NUMBER` is set to `False`) |
 | `FLANK_SIZE` | Flanking arm length |
 | `TARGET_LENGTH` | Gene length |
-| `TIGHT_FLANK` | 
-`True`: Algorithm should remove as much of the flanking arms as possible  
-`False`: Algorithm should retain as much of the flanking arms as possible |
+| `TIGHT_FLANK` | `True`: Algorithm should remove as much of the flanking arms as possible  `False`: Algorithm should retain as much of the flanking arms as possible |
 | `LEFT_HOMOLOGY_ARM` | Forward homology arm sequence |
 | `RIGHT_HOMOLOGY_ARM` | Reverse homology arm sequence |
 | `FORBIDDEN` | A list of motifs primers should not contain |
@@ -112,7 +108,7 @@ Other softwares: [Nupack](https://www.nupack.org)
 | `ORGANISM` | Target organism selected from the list above |
 
 
-#### Please do not modify the location and contents of the following files or the scripts can break!
+### Please do not modify the location and contents of the following files or the scripts can break!
 - utils.py  
 - any file in the "data" folder
 
