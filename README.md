@@ -118,3 +118,5 @@ Other softwares: [Nupack](https://www.nupack.org)
 [CCDS Database](https://www.ncbi.nlm.nih.gov/projects/CCDS/CcdsBrowse.cgi)  
 [UCSC Genome Browser](https://www.genome.ucsc.edu)  
 [IDT Codon Optimization](https://www.idtdna.com/restapi/swagger/docs/v1)  
+
+Please report bugs to czhangyx at berkeley dot edu.

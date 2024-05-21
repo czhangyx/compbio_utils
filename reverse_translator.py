@@ -6,9 +6,9 @@ from utils import import_IDT_information, reverse_translate
 
 ################################ CHANGE SETTINGS BEFORE EACH RUN #################################
 # Please refer to README.md for detailed explanations
-NAME_COLUMN_NUMBER = 0  # Column number that contains name, zero-indexed
-SEQUENCE_COLUMN_NUMBER = 5  # Column number that contains sequence information, zero-indexed
-ORGANISM = 'Mus musculus (mouse)'  # Refer to README.md for a full list of acceptable organisms
+NAME_COLUMN_NUMBER = 0
+SEQUENCE_COLUMN_NUMBER = 5
+ORGANISM = 'Mus musculus (mouse)'
 ##################################################################################################
 
 
