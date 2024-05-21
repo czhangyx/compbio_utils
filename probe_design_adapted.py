@@ -8,27 +8,13 @@ import nupack
 from Bio import SeqIO, Entrez
 from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
-from primer3 import calc_hairpin     #dependency: primer3-py
+from primer3 import calc_hairpin
 
 
 def designHCR3Probes(gene_id="", gene_name="", hairpin_id=None, email=None, 
                 sequence="", db=os.getcwd(), result_path=os.getcwd(), 
                 prb_length=20, gc_range=[40, 60], prb_space=1, dg_thresh=-9, 
                 spacer = ['ta','at'], to_excel=False):
-    """ Creates an Excel file in result_path containing probe designs for a given gene.
-    # TODO: fill in descriptions of arguments
-    Args:
-        gene_id:
-        gene_name:
-        hairpin_id:
-        db:
-        result_path:
-        prb_space:
-        dg_thresh:
-        spacer:
-        to_excel: bool, whether or not save excel file in result path
-
-    """
     if email:
         Entrez.email=email
 
@@ -137,21 +123,6 @@ def designUSeqFISHProbes(gene_id="", gene_name="", email=None,
                 padlock_start="ACATTA", padlock_end="AAGATA", spacer1="attta",
                 spacer2 = "atta", prb_space=1, dg_thresh=-9, 
                 to_excel=False):
-    """ Creates an Excel file in result_path containing probe designs for a given gene.
-    # TODO: fill in descriptions of arguments
-    Args:
-        gene_id:
-        gene_name:
-        email:
-        sequence:
-        db:
-        result_path:
-        prb_space:
-        dg_thresh:
-        spacer:
-        to_excel: bool, whether or not save excel file in result path
-
-    """
     if email:
         Entrez.email = email
 
@@ -275,6 +246,7 @@ def designUSeqFISHProbes(gene_id="", gene_name="", email=None,
     if to_excel:
         resultdf.to_excel(excel_writer = os.path.join(result_path, f"{gene_name}_probes.xlsx"))
     return resultdf
+
 
 ##### HELPER FUNCTIONS #####
 def ProbeBowtie2(fastafile, db=os.path.join(os.getcwd(), 'mouse_refseq_rna'), 

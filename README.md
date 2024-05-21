@@ -1,24 +1,65 @@
+# CompBio Utils: A collection of Python scripts useful for biological research
+
 ## Dependencies:
 Python packages: NumPy, Pandas, Biopython, primer3-py, openpyxl  
 Command line tools: Bowtie2  
 Other softwares: [Nupack](https://www.nupack.org)
 
-## Installation
-
 ## Functions
+### **Remember to tune the parameters before running each trial!**  
 ### 1. Primer design
-Primer generation from sequence: run primer_generator.py  
-Primer generation from chromosome coordinate: run generate_primers_from_coordinates.py  
-Input file format requirement:  
-- Excel file
+- Input file format requirement: Excel, .csv, or .txt formats are acceptable; sequences need to contain flanking arms already  
+- Run primer_generator.py  
+- The program will output an excel file containing the information of generated primers. Full forward and reverse primers with homology arms attached can be found in columns named "full fwd" and "full rev".  
+
+| Parameter name | Description |
+|:---------|:---------|
+| `CONVERT_FROM_COORDINATES` | 
+`True`: Only chromosome coordinates are available in the input file  
+`False`: Full sequences are available in the input file |
+| `COORDINATE_COLUMN_NUMBER` | The column number that contains chromosome coordinates in the input file, zero-indexed (value does not matter if `CONVERT_FROM_COORDINATES` is set to `False`) |
+| `SEQUENCE_COLUMN_NUMBER` | The column number that contains sequences in the input file, zero-indexed (value does not matter if `SEQUENCE_COLUMN_NUMBER` is set to `False`) |
+| `FLANK_SIZE` | Flanking arm length |
+| `TARGET_LENGTH` | Gene length |
+| `TIGHT_FLANK` | 
+`True`: Algorithm should remove as much of the flanking arms as possible  
+`False`: Algorithm should retain as much of the flanking arms as possible |
+| `LEFT_HOMOLOGY_ARM` | Forward homology arm sequence |
+| `RIGHT_HOMOLOGY_ARM` | Reverse homology arm sequence |
+| `FORBIDDEN` | A list of motifs primers should not contain |
+| `LOW_GC` | Lowest acceptable GC content% |
+| `HIGH_GC` | Highest acceptable GC content% |
+| `LOW_TM` | Lowest acceptable melting temperature |
+| `HIGH_TM` | Highest acceptable melting temperature |
+| `LEN_RANGE` | A range of acceptable primer length, excluding homology arms |  
+
 
 ### 2. HCR probe design
-Run HCR3_probe_designer.py
+### **Remember to tune the parameters before running each trial!**  
+- Run HCR3_probe_designer.py
+- The program will output an excel file containing the information of generated HCR probes. Full probes can be found in columns named "probe A" and "probe B".
+
+| Parameter name | Description |
+|:---------|:---------|
+| `GENE_NAMES` | A list of gene names |
+| `GENE_IDS` | A list of gene IDs, ordered the same as `GENE_NAMES` (use [NCBI nucleotide index]((https://www.ncbi.nlm.nih.gov/projects/CCDS/CcdsBrowse.cgi))) (contents does not matter if using `GENE_SEQS`) |
+| `GENE_SEQS` | A list of gene sequences, ordered the same as `GENE_NAMES` (contents does not matter if using `GENE_IDS`) |
+| `HAIRPIN_IDS` | A list of insulator IDs, ordered the same as `GENE_NAMES` (refer to [this paper](https://doi.org/10.1038/s41587-022-01648-w)) |
+| `PRB_LENGTH` | Desired probe length |
+| `GC_RANGE` | A list containing lowest and highest acceptable GC content%, respectively |
+| `PRB_SPACING` | Minimum spacing between a probe pair |
+| `DG_THRESHOLD` | Lowest acceptable delta G (Gibbs free energy) of a probe (cal/mol) |  
+
 
 ### 3. Reverse translation
 *This function requires Internet connection*
-Input file format requirement: text file with tab-separated values. The file should have 5 columns and 2 rows, including a header row. The second row should include information in the order of IDT username, IDT password, client ID, and client secret. Client ID and client secret can be found on IDT's website (see more at https://www.idtdna.com/pages/tools/apidoc).
-Acceptable target organisms (please enter the full name between quotes, including parenthese):
+### **Remember to tune the parameters before running each trial!**  
+- Input file format requirement:  
+    - IDT information: text file with tab-separated values. The file should have 5 columns and 2 rows (including a header row). The second row should include information in the order of IDT username, IDT password, client ID, and client secret. See more on [IDT's website](https://www.idtdna.com/pages/tools/apidoc).  
+    - Sequences to be reverse translated: 
+- Run reverse_translator.py  
+- The program will output an excel file containing the information of reverse translated sequences codon optimized to the selected target organism. 
+- Acceptable target organisms (please enter the full name between quotes, including parenthese):
 #### Commonly used
 "Drosophila melanogaster", "Escherichia coli K12", "Homo sapiens (human)", "Mus musculus (mouse)", "Pichia pastoris", "Saccharomyces cerevisiae"
 #### A
@@ -64,12 +105,20 @@ Acceptable target organisms (please enter the full name between quotes, includin
 #### Z
 "Zea mays"
 
-### 
-#### Citations
-[HCR probe design](https://doi.org/10.1038/s41587-022-01648-w)  
+| Parameter name | Description |
+|:---------|:---------|
+| `NAME_COLUMN_NUMBER` | The column number that contains peptide names in the input file, zero-indexed |
+| `SEQUENCE_COLUMN_NUMBER` | The column number that contains sequences in the input file, zero-indexed |
+| `ORGANISM` | Target organism selected from the list above |
 
-#### Data Sources
+
+#### Please do not modify the location and contents of the following files or the scripts can break!
+- utils.py  
+- any file in the "data" folder
+
+#### References
+[HCR probe design](https://doi.org/10.1038/s41587-022-01648-w)  
 [USeqFISH/HCR databases](https://doi.org/10.22002/b791z-fzd10)  
-[CCDS Database](https://www.ncbi.nlm.nih.gov/projects/CCDS/CcdsBrowse.cgi)
-[UCSC Genome Browser](https://www.genome.ucsc.edu)
-[IDT Codon Optimization](https://www.idtdna.com/restapi/swagger/docs/v1)
+[CCDS Database](https://www.ncbi.nlm.nih.gov/projects/CCDS/CcdsBrowse.cgi)  
+[UCSC Genome Browser](https://www.genome.ucsc.edu)  
+[IDT Codon Optimization](https://www.idtdna.com/restapi/swagger/docs/v1)  

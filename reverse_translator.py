@@ -4,24 +4,21 @@ import pandas as pd
 from utils import select_input_file, select_output_directory, get_six_digit_date_today
 from utils import import_IDT_information, reverse_translate
 
-################################# CHANGE SETTING BEFORE EACH RUN #################################
+################################ CHANGE SETTINGS BEFORE EACH RUN #################################
+# Please refer to README.md for detailed explanations
 NAME_COLUMN_NUMBER = 0  # Column number that contains name, zero-indexed
 SEQUENCE_COLUMN_NUMBER = 5  # Column number that contains sequence information, zero-indexed
 ORGANISM = 'Mus musculus (mouse)'  # Refer to README.md for a full list of acceptable organisms
 ##################################################################################################
 
 
-# Helper variables
-VALID_FILETYPES = [("Excel-1", ".xlsx"), ("Excel-2", ".xls"), ("Excel-3", ".xlsm"), ("Excel-4", ".xlsb"),
-                   ("Excel-5", ".odf"), ("Excel-6", ".ods"), ("Excel-7", ".odt"),
-                   ("CSV", ".csv"), ("TXT", ".txt")]
-
-
-
 # Import IDT information and data
 IDT_file = select_input_file({("text", ".txt"), ("csv", ".csv")})
 IDT_info = import_IDT_information(IDT_file)
-import_file_name = select_input_file(VALID_FILETYPES)
+import_file_name = select_input_file([("Excel-1", ".xlsx"), ("Excel-2", ".xls"),
+                                      ("Excel-3", ".xlsm"), ("Excel-4", ".xlsb"),
+                                      ("Excel-5", ".odf"), ("Excel-6", ".ods"),
+                                      ("Excel-7", ".odt"), ("CSV", ".csv"), ("TXT", ".txt")])
 df = pd.read_excel(import_file_name)
 array = df.values
 titles = df.columns.to_list()

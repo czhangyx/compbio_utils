@@ -3,54 +3,52 @@ from probe_design_adapted import designHCR3Probes
 from utils import select_output_directory, get_six_digit_date_today
 
 
-############################## CHANGE SETTING BEFORE EACH RUN ##############################
-# Obtain gene information from https://www.ncbi.nlm.nih.gov/projects/CCDS/CcdsBrowse.cgi
-gene_ids = [ # Use NCBI nucleotide index
-    'NM_009377.2', # TH
-    #'NM_010020.3', # SLC6A3
-    #'NM_009891.2', # CHAT
-]
-gene_names = [
-    'TH'#, 'SLC6A3', 'CHAT'
-    ]
-gene_seqs = [ # Leave as empty array if using gene ids
-]
-hairpin_ids = [3] # Insulator numbers, see https://doi.org/10.1038/s41587-022-01648-w
+############################# CHANGE SETTINGS BEFORE EACH RUN ##############################
+# Please refer to README.md for detailed explanations
+GENE_NAMES = [
 
-prb_length = 20
-gc_range = [40, 60]
-prb_space = 2
-dg_thresh = -9
+    ]
+GENE_IDS = [
+
+]
+GENE_SEQS = [
+    
+]
+HAIRPIN_IDS = [
+
+]
+PRB_LENGTH = 20
+GC_RANGE = [40, 60]
+PRB_SPACING = 2
+DG_THRESHOLD = -9
 ############################################################################################
 
 
 date = get_six_digit_date_today()
 result_path = select_output_directory(f"HCR3_probe_design_files_{date}")
-if gene_seqs:
-    for i in range(len(gene_names)):
-        resultdf = designHCR3Probes(#gene_id=gene_ids[i], 
-                                    gene_name=gene_names[i], 
+if GENE_SEQS:
+    for i in range(len(GENE_NAMES)):
+        resultdf = designHCR3Probes(gene_name=GENE_NAMES[i], 
                                     email='czhangyx@berkeley.edu',
-                                    sequence=gene_seqs[i],
-                                    hairpin_id=hairpin_ids[i], 
+                                    sequence=GENE_SEQS[i],
+                                    hairpin_id=HAIRPIN_IDS[i], 
                                     db=os.path.join(os.getcwd(), "data/mouse/mouse_refseq_rna"),
                                     result_path=result_path,
-                                    prb_length=prb_length,
-                                    gc_range=gc_range,
-                                    prb_space=prb_space,
-                                    dg_thresh=dg_thresh,
+                                    prb_length=PRB_LENGTH,
+                                    gc_range=GC_RANGE,
+                                    prb_space=PRB_SPACING,
+                                    dg_thresh=DG_THRESHOLD,
                                     to_excel=True)
 else:
-    for i in range(len(gene_names)):
-        resultdf = designHCR3Probes(gene_id=gene_ids[i], 
-                                    gene_name=gene_names[i], 
+    for i in range(len(GENE_NAMES)):
+        resultdf = designHCR3Probes(gene_id=GENE_IDS[i], 
+                                    gene_name=GENE_NAMES[i], 
                                     email='czhangyx@berkeley.edu',
-                                    #sequence=gene_seqs[i],
-                                    hairpin_id=hairpin_ids[i], 
+                                    hairpin_id=HAIRPIN_IDS[i], 
                                     db=os.path.join(os.getcwd(), "data/mouse/mouse_refseq_rna"),
                                     result_path=result_path,
-                                    prb_length=prb_length,
-                                    gc_range=gc_range,
-                                    prb_space=prb_space,
-                                    dg_thresh=dg_thresh,
+                                    prb_length=PRB_LENGTH,
+                                    gc_range=GC_RANGE,
+                                    prb_space=PRB_SPACING,
+                                    dg_thresh=DG_THRESHOLD,
                                     to_excel=True)
