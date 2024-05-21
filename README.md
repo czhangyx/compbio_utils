@@ -48,7 +48,7 @@ Other softwares: [Nupack](https://www.nupack.org)
 
 
 ### 3. Reverse translation
-*This function requires Internet connection*
+*This function requires Internet connection.*
 ### **Remember to tune the parameters before running each trial!**  
 - Input file format requirement:  
     - IDT information: text file with tab-separated values. The file should have 5 columns and 2 rows (including a header row). The second row should include information in the order of IDT username, IDT password, client ID, and client secret. See more on [IDT's website](https://www.idtdna.com/pages/tools/apidoc).  
