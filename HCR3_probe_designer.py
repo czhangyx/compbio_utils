@@ -1,4 +1,4 @@
-import os
+import os, sys
 from probe_design_adapted import designHCR3Probes
 from utils import select_output_directory, get_six_digit_date_today
 
@@ -25,15 +25,13 @@ DG_THRESHOLD = -9
 
 
 date = get_six_digit_date_today()
-result_path = select_output_directory(f"HCR3_probe_design_files_{date}")
-result_path = os.path.join(result_path, new_dir_name)
-print(result_path)
+result_path = os.path.join(select_output_directory(), f"HCR3_probe_design_files_{date}")
 try:
     os.mkdir(result_path)
 except:
     print(f"There is already a directory at {result_path}. Please ensure your selected directory is unique before proceeding.")
     sys.exit(0)
-    
+
 if GENE_SEQS:
     for i in range(len(GENE_NAMES)):
         resultdf = designHCR3Probes(gene_name=GENE_NAMES[i], 
