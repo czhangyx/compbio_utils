@@ -1,5 +1,5 @@
 import re
-import os, sys
+import os
 import requests, json
 import pandas as pd
 import tkinter as tk
@@ -76,7 +76,7 @@ class Primer:
     """
     def message(self, i: int):
         if self.fwd and self.rev:
-            print(f'\nSuccessfully picked fwd and rev primers for sequence #{i}')
+            print(f'Successfully picked fwd and rev primers for sequence #{i}')
         elif self.fwd:
             print(f'rev was unsuccessful for sequence #{i}')
         elif self.rev:
@@ -99,16 +99,16 @@ Inputs:
     high_tm: upper bound of melting temperature.
 """
 def pick_primer(primer: Primer, primer_type: str, selection: str, forbidden: list[str],
-                low_gc: float, high_gc: float, low_tm: float, high_tm: float):
+                low_gc: int, high_gc: int, low_tm: int, high_tm: int):
     assert primer_type in ['fwd', 'rev'], "primer_type should be fwd or rev"
 
     if not any([x in selection for x in forbidden]):
         gc = round(GC(selection), 2)
         tm = round(_Tm(selection), 2)
-        if gc in range(low_gc, high_gc+1) and tm in range(low_tm, high_tm+1):
-            if not primer.fwd and primer_type == 'fwd':
+        if low_gc <= gc and gc <= high_gc and low_tm <= tm and tm <= high_tm:
+            if primer_type == 'fwd' and not primer.fwd:
                 primer.update_fwd(selection, gc, tm)
-            elif not primer.rev and primer_type == 'rev':
+            elif primer_type == 'rev' and not primer.rev:
                 primer.update_rev(_get_complement(selection), gc, tm)
 
 
@@ -137,12 +137,10 @@ def select_input_file(valid_filetypes: dict) -> str:
 """
 Prompts user to select an output directory.
 
-Input:
-    new_dir_name: subdirectory name under the user-selected parent directory.
 Returns:
     result_path: result path where the program will generate files into.
 """
-def select_output_directory(new_dir_name: str) -> str:
+def select_output_directory() -> str:
     input("""\nYou will be asked to select a directory for data output. Press enter to continue.\n""")
     root = tk.Tk()
     root.withdraw()
@@ -152,12 +150,6 @@ def select_output_directory(new_dir_name: str) -> str:
         input("""\nYou did not select a directory. Please press enter to select a directory.\n""")
         result_path = filedialog.askdirectory(title="Please select an output directory")
     root.destroy()
-    result_path = os.path.join(result_path, new_dir_name)
-    try:
-        os.mkdir(result_path)
-    except:
-        print(f"There is already a directory at {result_path}. Please ensure your selected directory is unique before proceeding.")
-        sys.exit(0)
     return result_path
 
 
@@ -200,7 +192,7 @@ Inputs:
 """
 def report_progress(count: int, total: int, milestone: int=10):
     assert 0 <= milestone and milestone <= 100, "milestone must be a valid percentage between 0 and 100"
-    if not milestone:
+    if not milestone or not (total // milestone):
         return
     if (count+1) % (total // milestone) == 0:
         print(f"finished {count+1}/{total}")
@@ -224,7 +216,7 @@ def get_sequence_from_coordinate(coordinate: tuple, flank_included: bool,
     if not flank_included:
         start -= flank_size
         end += flank_size
-    data = requests.get(f"https://api.genome.ucsc.edu/getData/sequence?genome={genome};chrom={chromosome};start={start};end={end}", timeout=30)
+    data = requests.get(f"https://api.genome.ucsc.edu/getData/sequence?genome={genome};chrom={chromosome};start={start-1};end={end}", timeout=30)
     return data.json()['dna'].upper()
 
 
@@ -329,7 +321,7 @@ def _process_coordinates(coordinate: str) -> tuple:
     assert _is_coordinate(coordinate), f"coordinate {coordinate} is not valid"
 
     split = re.split(':|-', coordinate)
-    return (split[0], int(split[1]-1), int(split[2]))
+    return (split[0], int(split[1]), int(split[2]))
 
 
 def _is_coordinate(coordinate: str) -> bool:

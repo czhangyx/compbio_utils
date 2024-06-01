@@ -21,7 +21,7 @@ LOW_GC = 40
 HIGH_GC = 60
 LOW_TM = 50
 HIGH_TM = 60
-LEN_RANGE = range(22, 25)
+LEN_RANGE = range(22, 26)
 ##################################################################################################
 
 
@@ -39,9 +39,8 @@ if CONVERT_FROM_COORDINATES:
     print('\n------------ Retrieving sequences from chromosome coordinates ------------')
     coordinates = [peak[COORDINATE_COLUMN_NUMBER] for peak in array]
     total_seqs = []
-    current_percentage = 0
     for i in range(len(array)):
-        total_seqs.append(get_sequence_from_coordinate(coordinates[i]), FLANK_INCLUDED, FLANK_SIZE)
+        total_seqs.append(get_sequence_from_coordinate(coordinates[i], FLANK_INCLUDED, FLANK_SIZE))
         report_progress(i+1, len(array))
 else:
     total_seqs = [peak[SEQUENCE_COLUMN_NUMBER] for peak in array]
@@ -64,19 +63,19 @@ for seq in total_seqs:
             if primer.fwd and primer.rev:
                 break
             if TIGHT_FLANK:
-                pick_primer(primer, 'fwd', fwd_flank[-length:], FORBIDDEN,
-                            LOW_GC, HIGH_GC, LOW_TM, HIGH_TM)
-                pick_primer(primer, 'rev', rev_flank[:length], FORBIDDEN,
-                            LOW_GC, HIGH_GC, LOW_TM, HIGH_TM)
-                fwd_flank.pop()
-                rev_flank.pop(0)
+                pick_primer(primer, 'fwd', fwd_flank[-length:],
+                            FORBIDDEN, LOW_GC, HIGH_GC, LOW_TM, HIGH_TM)
+                pick_primer(primer, 'rev', rev_flank[:length],
+                            FORBIDDEN, LOW_GC, HIGH_GC, LOW_TM, HIGH_TM)
+                fwd_flank = fwd_flank[:-1]
+                rev_flank = rev_flank[1:]
             else:
-                pick_primer(primer, 'fwd', fwd_flank[:length], FORBIDDEN,
-                            LOW_GC, HIGH_GC, LOW_TM, HIGH_TM)
-                pick_primer(primer, 'rev', rev_flank[-length:], FORBIDDEN,
-                            LOW_GC, HIGH_GC, LOW_TM, HIGH_TM)
-                fwd_flank.pop(0)
-                rev_flank.pop()
+                pick_primer(primer, 'fwd', fwd_flank[:length],
+                            FORBIDDEN, LOW_GC, HIGH_GC, LOW_TM, HIGH_TM)
+                pick_primer(primer, 'rev', rev_flank[-length:],
+                            FORBIDDEN, LOW_GC, HIGH_GC, LOW_TM, HIGH_TM)
+                fwd_flank = fwd_flank[1:]
+                rev_flank = rev_flank[:-1]
 
     primers.append(primer)
     primer.message(i)
@@ -94,6 +93,6 @@ new_df.columns = titles + ['fwd primer', 'fwd length', 'fwd GC%', 'fwd Tm',
                            'full fwd', 'full rev']
 date = get_six_digit_date_today()
 filename = os.path.splitext(os.path.basename(import_file_name))[0] + f'_with_primers_{date}.xlsx'
-export_file_name = select_output_directory(filename)
+export_file_name = os.path.join(select_output_directory(), filename)
 new_df.to_excel(export_file_name, index=False)
 print('Complete!\n')
