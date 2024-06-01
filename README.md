@@ -17,6 +17,7 @@ Other softwares: [Nupack](https://www.nupack.org)
 | `CONVERT_FROM_COORDINATES` | `True`: Only chromosome coordinates are available in the input file<br>`False`: Full sequences are available in the input file |
 | `COORDINATE_COLUMN_NUMBER` | The column number that contains chromosome coordinates in the input file, zero-indexed (value does not matter if `CONVERT_FROM_COORDINATES` is set to `False`) |
 | `SEQUENCE_COLUMN_NUMBER` | The column number that contains sequences in the input file, zero-indexed (value does not matter if `SEQUENCE_COLUMN_NUMBER` is set to `False`) |
+| `FLANK_INCLUDED` | `True`: Provided coordinates/sequences include flanking arms for primer search<br>`False`: Provided coordinates/sequences do not include flanking arms for primer search |
 | `FLANK_SIZE` | Flanking arm length |
 | `TARGET_LENGTH` | Gene length |
 | `TIGHT_FLANK` | `True`: Algorithm should remove as much of the flanking arms as possible<br>`False`: Algorithm should retain as much of the flanking arms as possible |

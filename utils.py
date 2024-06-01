@@ -212,12 +212,18 @@ Connect to UCSC Genome Browser API to return DNA sequence at specified location.
 Inputs:
     coordinate: tuple of coordinate information generated from _process_coordinates.
                 Example: (chr3, 1490329, 1491329)
+    flank_included: if flanking arms are already included in the provided coordinates.
+    flank_size: the length of flanking arms on each end of the target gene.
     genome: genome of interest.
 """
-def get_sequence_from_coordinate(coordinate: tuple, genome: str ='mm10') -> str:
+def get_sequence_from_coordinate(coordinate: tuple, flank_included: bool,
+                                 flank_size: int, genome: str ='mm10') -> str:
     assert _genome_in_ucsc(genome), f"Genome {genome} is not supported by data source"
 
     chromosome, start, end = _process_coordinates(coordinate)
+    if not flank_included:
+        start -= flank_size
+        end += flank_size
     data = requests.get(f"https://api.genome.ucsc.edu/getData/sequence?genome={genome};chrom={chromosome};start={start};end={end}", timeout=30)
     return data.json()['dna'].upper()
 

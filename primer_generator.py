@@ -7,10 +7,11 @@ from utils import get_sequence_from_coordinate, pick_primer, Primer
 
 ################################# CHANGE SETTINGS BEFORE EACH RUN ################################
 # Please refer to README.md for detailed explanations
-CONVERT_FROM_COORDINATES = False
+CONVERT_FROM_COORDINATES = True
 COORDINATE_COLUMN_NUMBER = 1
 SEQUENCE_COLUMN_NUMBER = 2
-FLANK_SIZE = 50
+FLANK_INCLUDED = False
+FLANK_SIZE = 100
 TARGET_LENGTH = 500
 TIGHT_FLANK = True
 LEFT_HOMOLOGY_ARM = ''
@@ -40,7 +41,7 @@ if CONVERT_FROM_COORDINATES:
     total_seqs = []
     current_percentage = 0
     for i in range(len(array)):
-        total_seqs.append(get_sequence_from_coordinate(coordinates[i]))
+        total_seqs.append(get_sequence_from_coordinate(coordinates[i]), FLANK_INCLUDED, FLANK_SIZE)
         report_progress(i+1, len(array))
 else:
     total_seqs = [peak[SEQUENCE_COLUMN_NUMBER] for peak in array]
