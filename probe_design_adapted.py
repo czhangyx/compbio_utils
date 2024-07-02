@@ -290,6 +290,8 @@ def IsUnique(samfile_path, gene_name, prb_pos, full=False):
     # search hitted ids if it is variants of the same gene
     variants = ['*']
     bad_unique = np.zeros((num_prbs,), dtype=bool)
+    if full:
+        bad_unique = np.zeros((num_prbs*2,), dtype=bool)
     for i, hits_for_oneprb in enumerate(hits):
         for hit_id in hits_for_oneprb:
             if hit_id not in variants:
@@ -299,6 +301,9 @@ def IsUnique(samfile_path, gene_name, prb_pos, full=False):
                     variants.append(hit_id)
                 else:
                     bad_unique[i] = 1
+    if full:
+        bad_unique = bad_unique.reshape(num_prbs, 2)
+        bad_unique = np.any(bad_unique, axis=1)
 
     return bad_unique
 
